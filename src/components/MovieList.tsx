@@ -48,24 +48,22 @@ const getFavorites = async (favoritesIdArray: number[]) => {
 
 export default function MovieList() {
   const pathname = usePathname();
-  const favObject = localStorage.getItem("favorites");
-  let favoritesIdArray: number[] = [];
-  if (favObject) favoritesIdArray = JSON.parse(favObject);
-  const [fav, setFav] = useState(favoritesIdArray);
-  useEffect(() => {}, []);
-  useEffect(() => {
-    console.log("we  in ise effect", pathname.includes("favorites"));
-    setFav(favoritesIdArray);
-  }, []);
+  const [fav, setFav] = useState<number[]>([]);
 
   const {
     data: movies,
     error: queryError,
     isLoading,
   } = useQuery({
-    queryFn: pathname.includes("favorites")
-      ? () => getFavorites(favoritesIdArray)
-      : getMovies,
+    queryFn: async () => {
+      const favObject = localStorage.getItem("favorites");
+      let favoritesIdArray: number[] = [];
+      if (favObject) favoritesIdArray = JSON.parse(favObject);
+      setFav(favoritesIdArray);
+      if (pathname.includes("favorites"))
+        return await getFavorites(favoritesIdArray);
+      return await getMovies();
+    },
     queryKey: ["movies"],
   });
   if (queryError) {
