@@ -1,0 +1,8 @@
+.container {
+  height: 550px;
+  width: 10px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(169, 169, 169, 0.46);
+  flex-basis: 20%;
+}

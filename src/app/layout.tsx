@@ -2,11 +2,9 @@ import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
 import Header from "../components/Header";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import Provider from "./Provider";
 
 const poppins = Poppins({ weight: "400", subsets: ["latin"] });
-
-const querClient = new QueryClient();
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -20,12 +18,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <QueryClientProvider client={querClient}>
+      <Provider>
         <body className={poppins.className}>
           <Header />
           {children}
         </body>
-      </QueryClientProvider>
+      </Provider>
     </html>
   );
 }
