@@ -6,22 +6,28 @@ import Image from "next/image";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-const setAsFavorite = (id: number) => {
+
+const setAsFavorite = (movie: Movies) => {
   const fav = localStorage.getItem("favorites");
-  let favoritesidArray: number[] = [],
-    updatedArray: number[] = [];
-  if (fav) favoritesidArray = JSON.parse(fav);
-  if (!favoritesidArray.some((favId) => favId == id)) {
-    updatedArray = [...favoritesidArray, id];
+  let favoritesArray: Movies[] = [],
+    updatedArray: Movies[] = [];
+  if (fav) favoritesArray = JSON.parse(fav);
+
+  //If the favorite movie does not exist then add it to the list
+  if (!favoritesArray.some((favMov) => favMov.id == movie.id)) {
+    updatedArray = [...favoritesArray, movie];
     localStorage.setItem("favorites", JSON.stringify(updatedArray));
   } else {
-    const ind = favoritesidArray.findIndex((el) => el == id);
-    favoritesidArray.splice(ind, 1);
-    updatedArray = favoritesidArray;
+    //If the favorite movie exists then remove it from the list
+    const ind = favoritesArray.findIndex((el) => el.id == movie.id);
+    favoritesArray.splice(ind, 1);
+    updatedArray = favoritesArray;
     localStorage.setItem("favorites", JSON.stringify(updatedArray));
   }
+
   return updatedArray;
 };
+
 const MovieCard = ({
   id,
   title,
@@ -29,26 +35,21 @@ const MovieCard = ({
   vote_average,
   poster_path,
   favorited,
-  setFav,
 }: Movies & {
-  favorited: boolean;
-  setFav: Dispatch<SetStateAction<number[]>>;
+  favorited?: boolean;
 }) => {
   const pathname = usePathname();
   const queryClient = useQueryClient();
 
   const { mutateAsync: setFavoriteMovie } = useMutation({
-    mutationFn: async (id: number) => {
-      return setAsFavorite(id);
+    mutationFn: async (movie: Movies) => {
+      //on mutation the new favorite movies array is returned to the onSuccess method to mutate the data
+      return setAsFavorite(movie);
     },
     onSuccess: (data) => {
-      if (pathname.includes("favorites")) {
-        let movies: Movies[] | undefined = queryClient.getQueryData(["movies"]);
-        movies = movies?.filter((movie) => data.some((el) => el == movie.id));
-        queryClient.setQueryData(["movies"], movies);
-        console.log(movies,"mobsdjb")
-      }
-      setFav(data);
+      //Update the favorites when a movie is selected/deselected from the favorites
+      //Set the new data as the favorite movies and refetch it
+      queryClient.invalidateQueries({ queryKey: ["favorites"] });
     },
   });
 
@@ -83,7 +84,13 @@ const MovieCard = ({
         <h4>{title}</h4>
         <div
           onClick={() => {
-            setFavoriteMovie(id);
+            setFavoriteMovie({
+              id,
+              title,
+              release_date,
+              vote_average,
+              poster_path,
+            });
           }}
           style={{
             position: "relative",

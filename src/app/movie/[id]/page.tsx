@@ -1,30 +1,23 @@
-"use client";
-import { useQuery } from "@tanstack/react-query";
 import React from "react";
 import styles from "./page.module.css";
 import type { Movies } from "@/components/MovieList";
 import Image from "next/image";
-const Page = ({ params }: { params: { id: string } }): React.ReactNode => {
-  const { data: movie, error: queryError } = useQuery({
-    queryKey: ["single-movie"],
-    queryFn: async () => {
-      let data = await fetch(
-        `https://api.themoviedb.org/3/movie/${params.id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_TMDB_API_KEY}`,
-          },
-        }
-      );
-      let res = await data.json();
-      console.log(res);
-      return res as Movies & {
-        backdrop_path: string;
-        overview: string;
-        runtime: number;
-      };
+const Page = async ({ params }: { params: { id: string } }): Promise<any> => {
+  // Fetched the data with SSR since this page is not stateful
+  let data = await fetch(`https://api.themoviedb.org/3/movie/${params.id}`, {
+    headers: {
+      Authorization: `Bearer ${process.env.NEXT_PUBLIC_TMDB_API_KEY}`,
     },
   });
+  let res = await data.json();
+
+  //Setting the type with few more details to display
+  let movie = res as Movies & {
+    backdrop_path: string;
+    runtime: number;
+    overview: string;
+  };
+
   return (
     <div className={styles.container}>
       {!movie ? (
